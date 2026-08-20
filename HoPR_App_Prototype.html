@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HoPR — Parliament Public Participation App (Prototype)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Ethiopic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F6F3EC;
+    --paper-card:#FFFFFF;
+    --ink:#1F2421;
+    --ink-soft:#5B6560;
+    --forest:#1B4D3E;
+    --forest-dark:#123328;
+    --forest-tint:#E7EEE9;
+    --gold:#C9A227;
+    --gold-tint:#FBF3DC;
+    --terracotta:#A23E48;
+    --terracotta-tint:#F7E7E7;
+    --sage:#7C9885;
+    --sage-tint:#EAF0EC;
+    --line:#E3DED2;
+    --radius:16px;
+    --shadow:0 20px 45px -20px rgba(18,51,40,0.35);
+  }
+  [data-contrast="high"]{
+    --paper:#0E1210;
+    --paper-card:#171C19;
+    --ink:#FAF9F6;
+    --ink-soft:#C9D2CC;
+    --forest:#4CAE8E;
+    --forest-tint:#1B2C25;
+    --gold:#F0C64B;
+    --gold-tint:#2B2413;
+    --terracotta:#E27884;
+    --terracotta-tint:#2E1A1C;
+    --sage:#9FC0AA;
+    --sage-tint:#1B2621;
+    --line:#33403A;
+    --shadow:0 20px 45px -20px rgba(0,0,0,0.6);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: radial-gradient(circle at 20% 0%, #FBF8F1 0%, #EFE9DA 55%, #E7DFCC 100%);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px 16px;
+    font-family:'IBM Plex Sans','IBM Plex Sans Ethiopic',sans-serif;
+  }
+  .lang-am, .lang-am *{ font-family:'IBM Plex Sans Ethiopic','IBM Plex Sans',sans-serif; }
+
+  .stage{ display:flex; flex-direction:column; align-items:center; gap:14px; }
+  .stage-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:#8A8272;
+  }
+
+  .phone{
+    width:390px;
+    max-width:94vw;
+    height:820px;
+    max-height:88vh;
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:44px;
+    box-shadow:var(--shadow), 0 0 0 10px #1a1a1a, 0 0 0 12px #3a3a3a;
+    overflow:hidden;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    transition:background .25s ease, color .25s ease;
+  }
+  .notch{
+    position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:150px; height:26px; background:#1a1a1a; border-radius:0 0 16px 16px; z-index:50;
+  }
+  .statusbar{ height:44px; flex-shrink:0; display:flex; align-items:flex-end; justify-content:space-between; padding:0 26px 6px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); }
+
+  .topbar{
+    flex-shrink:0; padding:10px 20px 16px; display:flex; align-items:center; gap:10px;
+    border-bottom:1px solid var(--line);
+  }
+  .topbar .back{
+    width:32px;height:32px;border-radius:10px;background:var(--forest-tint);color:var(--forest);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:16px;border:none;
+  }
+  .topbar h1{
+    font-family:'Fraunces',serif; font-weight:600; font-size:19px; margin:0; flex:1; letter-spacing:-.01em;
+  }
+  .wordmark{ display:flex; align-items:center; gap:8px; }
+  .wordmark .crest{
+    width:30px;height:30px;border-radius:9px;background:var(--forest);color:var(--gold);
+    display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:700;font-size:15px;flex-shrink:0;
+  }
+  .wordmark .name{ font-family:'Fraunces',serif; font-weight:600; font-size:17px; }
+  .wordmark .name small{ display:block; font-family:'IBM Plex Sans',sans-serif; font-weight:500; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft); }
+
+  .screen{ flex:1; overflow-y:auto; padding:18px 20px 100px; -webkit-overflow-scrolling:touch; }
+  .screen::-webkit-scrollbar{ width:0; }
+  .screen.no-tabpad{ padding-bottom:22px; }
+
+  .tabbar{
+    position:absolute; bottom:0; left:0; right:0; height:78px; background:var(--paper-card);
+    border-top:1px solid var(--line); display:flex; padding-bottom:14px; z-index:40;
+  }
+  .tab{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    background:none;border:none;cursor:pointer; color:var(--ink-soft); font-family:'IBM Plex Sans',sans-serif; font-size:10.5px; font-weight:500;
+  }
+  .tab .ic{ font-size:19px; line-height:1; }
+  .tab.active{ color:var(--forest); }
+  .tab.active .ic{ transform:translateY(-1px); }
+
+  h2.section-title{ font-family:'Fraunces',serif; font-size:15px; font-weight:600; margin:22px 0 10px; color:var(--ink); }
+  h2.section-title:first-child{ margin-top:0; }
+  .eyebrow{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--forest); }
+
+  .card{ background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; }
+  .card + .card{ margin-top:10px; }
+
+  .pill{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:4px 10px; border-radius:99px; }
+  .pill-gold{ background:var(--gold-tint); color:#8A6A0A; }
+  .pill-forest{ background:var(--forest-tint); color:var(--forest); }
+  .pill-terracotta{ background:var(--terracotta-tint); color:var(--terracotta); }
+  .pill-sage{ background:var(--sage-tint); color:#4A6552; }
+
+  button.btn{ font-family:'IBM Plex Sans',sans-serif; font-weight:600; border:none; border-radius:12px; cursor:pointer; font-size:14px; padding:13px 18px; display:flex; align-items:center; justify-content:center; gap:8px; transition:transform .12s ease, box-shadow .12s ease; }
+  button.btn:active{ transform:scale(.97); }
+  .btn-primary{ background:var(--forest); color:#fff; width:100%; box-shadow:0 8px 18px -8px rgba(27,77,62,.55); }
+  .btn-primary[disabled]{ opacity:.45; cursor:not-allowed; }
+  .btn-ghost{ background:var(--forest-tint); color:var(--forest); width:100%; }
+  .btn-outline{ background:transparent; color:var(--forest); border:1.5px solid var(--forest); width:100%; }
+  .btn-gold{ background:var(--gold); color:#3B2F05; }
+  .btn-sm{ padding:9px 14px; font-size:12.5px; width:auto; }
+
+  /* ---- Onboarding ---- */
+  .onboard-hero{ text-align:center; padding:18px 0 6px; }
+  .onboard-hero .crest-lg{ width:64px;height:64px;border-radius:20px;background:var(--forest);color:var(--gold); display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:700;font-size:30px;margin:0 auto 16px; box-shadow:0 12px 22px -10px rgba(27,77,62,.5);}
+  .onboard-hero h1{ font-family:'Fraunces',serif; font-size:25px; font-weight:600; margin:0 0 8px; letter-spacing:-.01em; }
+  .onboard-hero p{ color:var(--ink-soft); font-size:14px; line-height:1.5; margin:0 auto; max-width:280px; }
+  .step-dots{ display:flex; justify-content:center; gap:6px; margin:18px 0 4px; }
+  .step-dots span{ width:22px;height:4px;border-radius:99px;background:var(--line); }
+  .step-dots span.on{ background:var(--forest); }
+
+  .topic-tag{ display:inline-flex; align-items:center; gap:6px; padding:10px 16px; border-radius:99px; border:1.5px solid var(--line); font-size:13.5px; font-weight:500; cursor:pointer; margin:0 8px 8px 0; background:var(--paper-card); }
+  .topic-tag.selected{ background:var(--forest); color:#fff; border-color:var(--forest); }
+  .topic-wrap{ display:flex; flex-wrap:wrap; }
+
+  .mp-match-card{ display:flex; gap:14px; align-items:center; }
+  .avatar{ width:56px;height:56px; border-radius:14px; flex-shrink:0; display:flex;align-items:center;justify-content:center; font-family:'Fraunces',serif; font-weight:600; font-size:20px; color:#fff; }
+  .avatar-sm{ width:40px;height:40px;border-radius:11px;font-size:15px; }
+  .avatar-lg{ width:84px;height:84px;border-radius:20px;font-size:30px; margin:0 auto 12px; box-shadow:0 12px 22px -10px rgba(0,0,0,.25); }
+
+  /* ---- Feed / Dashboard ---- */
+  .widget-row{ display:flex; gap:10px; }
+  .widget-row .card{ flex:1; }
+  .qa-btn{ display:flex; flex-direction:column; align-items:flex-start; gap:8px; background:var(--forest-tint); border:none; border-radius:13px; padding:12px; width:100%; cursor:pointer; text-align:left; }
+  .qa-btn .ic{ font-size:18px; }
+  .qa-btn span.lbl{ font-size:11.5px; font-weight:600; color:var(--forest); line-height:1.25; }
+  .qa-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+
+  .feed-item{ display:flex; gap:12px; padding:13px 0; border-bottom:1px solid var(--line); cursor:pointer; }
+  .feed-item:last-child{ border-bottom:none; }
+  .feed-badge{ width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0; }
+  .feed-title{ font-weight:600; font-size:13.5px; margin:0 0 3px; line-height:1.35; }
+  .feed-sub{ font-size:12px; color:var(--ink-soft); margin:0; line-height:1.4; }
+  .feed-meta{ font-family:'IBM Plex Mono',monospace; font-size:10px; color:#9B9484; margin-top:5px; }
+
+  .today-item{ display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px dashed var(--line); cursor:pointer; }
+  .today-item:last-child{ border:none; }
+  .today-time{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--forest); font-weight:600; width:48px; flex-shrink:0; }
+
+  /* ---- Vote tally bar (signature element) ---- */
+  .tally{ display:flex; height:10px; border-radius:6px; overflow:hidden; background:var(--line); }
+  .tally span{ height:100%; }
+  .tally-for{ background:var(--forest); }
+  .tally-against{ background:var(--terracotta); }
+  .tally-abstain{ background:var(--gold); }
+  .tally-legend{ display:flex; gap:14px; margin-top:8px; font-size:11px; color:var(--ink-soft); }
+  .tally-legend .dot{ width:8px;height:8px;border-radius:99px;display:inline-block;margin-right:4px; }
+
+  /* ---- Bills ---- */
+  .search-bar{ display:flex; align-items:center; gap:8px; background:var(--paper-card); border:1.5px solid var(--line); border-radius:13px; padding:11px 14px; margin-bottom:12px; }
+  .search-bar input{ border:none; outline:none; background:none; font-size:14px; flex:1; font-family:inherit; color:var(--ink); }
+  .filter-row{ display:flex; gap:8px; margin-bottom:14px; overflow-x:auto; }
+  .filter-chip{ flex-shrink:0; padding:7px 13px; border-radius:99px; border:1.5px solid var(--line); font-size:12px; font-weight:600; background:var(--paper-card); cursor:pointer; color:var(--ink-soft); }
+  .filter-chip.on{ background:var(--forest); color:#fff; border-color:var(--forest); }
+
+  .bill-row{ display:block; padding:14px 0; border-bottom:1px solid var(--line); cursor:pointer; }
+  .bill-row:last-child{ border-bottom:none; }
+  .bill-row .toprow{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px; }
+  .bill-row h3{ margin:0; font-size:14px; font-weight:600; line-height:1.35; }
+  .bill-row .ref{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#9B9484; }
+
+  .meta-kv{ display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--line); font-size:12.5px; gap:12px; }
+  .meta-kv:last-child{ border-bottom:none; }
+  .meta-kv .k{ color:var(--ink-soft); flex-shrink:0; }
+  .meta-kv .v{ text-align:right; font-weight:500; }
+
+  .track-toggle{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .switch{ width:44px;height:26px;border-radius:99px; background:var(--line); position:relative; cursor:pointer; flex-shrink:0; transition:background .15s; }
+  .switch.on{ background:var(--forest); }
+  .switch .knob{ width:20px;height:20px;border-radius:99px;background:#fff; position:absolute; top:3px; left:3px; transition:left .15s; box-shadow:0 1px 3px rgba(0,0,0,.3); }
+  .switch.on .knob{ left:21px; }
+
+  /* ---- MP profile ---- */
+  .profile-hero{ text-align:center; padding:10px 0 4px; }
+  .profile-hero h2{ font-family:'Fraunces',serif; font-size:21px; margin:0 0 4px; font-weight:600; }
+  .profile-hero .party{ color:var(--ink-soft); font-size:13px; margin-bottom:10px; }
+  .contact-icons{ display:flex; justify-content:center; gap:10px; margin-top:12px; }
+  .contact-icons a{ width:38px;height:38px;border-radius:11px;background:var(--forest-tint);color:var(--forest); display:flex;align-items:center;justify-content:center; font-size:16px; text-decoration:none; cursor:pointer; }
+  .subtab-row{ display:flex; gap:6px; margin:18px 0 12px; background:var(--forest-tint); border-radius:12px; padding:4px; }
+  .subtab{ flex:1; text-align:center; padding:8px; border-radius:9px; font-size:12px; font-weight:600; color:var(--forest); cursor:pointer; }
+  .subtab.on{ background:var(--paper-card); box-shadow:0 3px 8px -4px rgba(0,0,0,.15); }
+
+  .vote-row{ display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px solid var(--line); gap:10px; }
+  .vote-row:last-child{ border-bottom:none; }
+  .vote-row .bn{ font-size:13px; font-weight:500; flex:1; }
+  .vote-row .dt{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-soft); }
+
+  .contrib-row{ padding:12px 0; border-bottom:1px solid var(--line); cursor:pointer; }
+  .contrib-row:last-child{ border-bottom:none; }
+  .contrib-row h4{ margin:0 0 4px; font-size:13px; font-weight:600; }
+  .contrib-row p{ margin:0; font-size:11.5px; color:var(--ink-soft); }
+
+  /* ---- forms ---- */
+  label.f-label{ display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin:0 0 6px; text-transform:uppercase; letter-spacing:.05em; }
+  input.f-input, textarea.f-input, select.f-input{
+    width:100%; border:1.5px solid var(--line); border-radius:11px; padding:12px 13px; font-family:inherit; font-size:14px; color:var(--ink); background:var(--paper-card); outline:none; margin-bottom:16px;
+  }
+  input.f-input:focus, textarea.f-input:focus, select.f-input:focus{ border-color:var(--forest); }
+  textarea.f-input{ resize:vertical; min-height:90px; }
+  .verify-note{ display:flex; gap:9px; background:var(--gold-tint); border-radius:12px; padding:12px; font-size:12px; color:#7A5F0A; margin-bottom:16px; line-height:1.5; }
+
+  .confirm-splash{ text-align:center; padding:50px 16px; }
+  .confirm-splash .ic-big{ width:64px;height:64px;border-radius:99px;background:var(--forest-tint);color:var(--forest);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 18px; }
+  .confirm-splash h3{ font-family:'Fraunces',serif; font-size:19px; margin:0 0 8px; }
+  .confirm-splash p{ color:var(--ink-soft); font-size:13.5px; line-height:1.5; margin:0 0 24px; }
+
+  /* ---- Engagement hub ---- */
+  .seg-row{ display:flex; gap:6px; background:var(--forest-tint); border-radius:12px; padding:4px; margin-bottom:16px; }
+  .seg{ flex:1; text-align:center; padding:9px 4px; border-radius:9px; font-size:11.5px; font-weight:600; color:var(--forest); cursor:pointer; }
+  .seg.on{ background:var(--paper-card); box-shadow:0 3px 8px -4px rgba(0,0,0,.15); }
+
+  .poll-opt{ display:flex; align-items:center; justify-content:space-between; padding:13px 14px; border:1.5px solid var(--line); border-radius:12px; margin-bottom:8px; cursor:pointer; position:relative; overflow:hidden; }
+  .poll-opt .fill{ position:absolute; left:0; top:0; bottom:0; background:var(--forest-tint); z-index:0; transition:width .4s ease; }
+  .poll-opt .lbl, .poll-opt .pct{ position:relative; z-index:1; font-size:13px; font-weight:600; }
+  .poll-opt.voted-for{ border-color:var(--forest); }
+
+  .qa-thread{ margin-bottom:16px; }
+  .qa-q{ background:var(--paper-card); border:1px solid var(--line); border-radius:14px 14px 4px 14px; padding:13px; font-size:13px; margin-bottom:8px; }
+  .qa-a{ background:var(--forest-tint); border-radius:4px 14px 14px 14px; padding:13px; font-size:13px; margin-left:20px; }
+  .qa-a .who{ display:flex; align-items:center; gap:6px; font-weight:700; font-size:11.5px; color:var(--forest); margin-bottom:6px; }
+  .reaction-row{ display:flex; gap:8px; margin-top:10px; margin-left:20px; }
+  .react-btn{ display:flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600; padding:6px 11px; border-radius:99px; border:1.5px solid var(--line); background:var(--paper-card); cursor:pointer; color:var(--ink-soft); }
+  .react-btn.on{ border-color:var(--forest); color:var(--forest); background:var(--forest-tint); }
+
+  /* ---- settings ---- */
+  .setting-row{ display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--line); gap:10px; }
+  .setting-row:last-child{ border-bottom:none; }
+  .setting-row .lbl{ font-size:13.5px; font-weight:600; }
+  .setting-row .desc{ font-size:11.5px; color:var(--ink-soft); margin-top:2px; }
+  .lang-list{ display:flex; flex-direction:column; gap:0; }
+  .lang-item{ display:flex; align-items:center; justify-content:space-between; padding:13px 0; border-bottom:1px solid var(--line); cursor:pointer; }
+  .lang-item:last-child{ border-bottom:none; }
+  .lang-item .lname{ font-size:14px; font-weight:600; }
+  .lang-item .lnative{ font-size:12px; color:var(--ink-soft); }
+  .lang-item .check{ width:20px;height:20px;border-radius:99px;border:2px solid var(--line); flex-shrink:0; display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px; }
+  .lang-item.sel .check{ background:var(--forest); border-color:var(--forest); }
+  .demo-note{ background:var(--sage-tint); border-radius:12px; padding:12px; font-size:11.5px; color:#3E5A47; line-height:1.5; margin-top:16px; }
+
+  .scope-flag{ display:inline-flex; align-items:center; gap:5px; font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:#9B9484; background:#EDE9DC; padding:3px 8px; border-radius:99px; margin-top:6px; }
+
+  ::selection{ background:var(--gold-tint); }
+  a{ color:inherit; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="stage-label">HoPR — Public Participation App · Interactive Prototype · Mock Data</div>
+  <div class="phone" id="phone" data-contrast="normal">
+    <div class="notch"></div>
+    <div class="statusbar"><span id="clock">9:41</span><span>●●● Mock — no live data</span></div>
+    <div id="app"></div>
+  </div>
+</div>
+
+<script>
+/* ---------------------------------------------------------
+   MOCK DATA — mirrors the SRS entity model (User, MP, Bill,
+   Event, InteractionThread). Swap this block for real API
+   responses when wiring up the production backend.
+--------------------------------------------------------- */
+
+const MPS = [
+  { id:'mp1', name:'Sara Getachew', party:'Prosperity Party', region:'Addis Ababa · Bole', color:'#1B4D3E',
+    bio:'Serving her second term, Sara Getachew sits on the Standing Committee for Economic and Financial Affairs and has sponsored three data-protection bills since 2023.',
+    education:'LLB, Addis Ababa University · MPA, London School of Economics',
+    votes:[
+      {bill:'Digital Transactions Proclamation', date:'2026-07-02', vote:'For'},
+      {bill:'National Data Protection Proclamation', date:'2026-05-18', vote:'For'},
+      {bill:'Basic Education Access Amendment', date:'2026-03-11', vote:'Abstained'},
+    ],
+    contributions:[
+      {date:'2026-08-04', type:'Speech', title:'Remarks on digital ID rollout timelines'},
+      {date:'2026-06-22', type:'Question', title:'Question to the Minister on rural connectivity funding'},
+    ]
+  },
+  { id:'mp2', name:'Dawit Bekele', party:'Ethiopian Citizens for Social Justice', region:'Oromia · Adama', color:'#A23E48',
+    bio:'A former civil engineer, Dawit Bekele focuses on infrastructure oversight and public health financing.',
+    education:'BSc Civil Engineering, Adama Science & Technology University',
+    votes:[
+      {bill:'Public Health Insurance Directive', date:'2026-07-29', vote:'For'},
+      {bill:'Climate Resilience & Green Investment Bill', date:'2026-06-14', vote:'Against'},
+    ],
+    contributions:[
+      {date:'2026-07-30', type:'Speech', title:'Floor remarks on the Public Health Insurance Directive'},
+    ]
+  },
+  { id:'mp3', name:'Selam Tesfaye', party:'Prosperity Party', region:'Tigray · Mekelle', color:'#C9A227',
+    bio:'Selam Tesfaye chairs the Committee on Climate and Natural Resources and has led three public consultations on green investment policy.',
+    education:'MSc Environmental Policy, Mekelle University',
+    votes:[
+      {bill:'Climate Resilience & Green Investment Bill', date:'2026-06-14', vote:'For'},
+    ],
+    contributions:[
+      {date:'2026-08-10', type:'Speech', title:'Opening statement, Climate Resilience Bill second reading'},
+    ]
+  },
+];
+
+const BILLS = [
+  { id:'b1', title:'Digital Transactions Proclamation', stage:'Committee Review', topic:'Economy',
+    plain:'Sets out rules for how digital and mobile-money payments are regulated, aiming to make everyday transactions safer and easier to trace.',
+    ref:'PROC/2026/118', type:'Proclamation', enact:'—', effective:'—', issuer:'Ministry of Finance',
+    institution:'House of Peoples\u2019 Representatives', keywords:'Digital payments, fintech, consumer protection',
+    abstract:'Establishes a licensing and oversight framework for digital payment providers operating nationally.',
+    status:'Draft', lang:'English, Amharic', related:'National Data Protection Proclamation', source:'Ministry of Finance', version:'v1.2 (amended committee draft)', format:'PDF, 2.1MB',
+    votes:{for:0,against:0,abstain:0}, tracked:false },
+  { id:'b2', title:'Climate Resilience & Green Investment Bill', stage:'Second Reading', topic:'Climate',
+    plain:'Creates tax incentives for renewable energy investment and sets emissions targets for major industries over the next decade.',
+    ref:'BILL/2026/054', type:'Regulation', enact:'—', effective:'2027-01-01', issuer:'Ministry of Planning & Development',
+    institution:'House of Peoples\u2019 Representatives', keywords:'Climate, renewable energy, emissions',
+    abstract:'Introduces graduated tax credits for renewable infrastructure and binding sector emissions ceilings.',
+    status:'Draft', lang:'English, Amharic, Afaan Oromo', related:'—', source:'Ministry of Planning & Development', version:'v2.0', format:'PDF, 3.4MB',
+    votes:{for:214,against:96,abstain:18}, tracked:true },
+  { id:'b3', title:'Basic Education Access Amendment', stage:'Passed', topic:'Education',
+    plain:'Expands free basic education eligibility to include children in informal settlements and extends school meal programs.',
+    ref:'AMD/2025/301', type:'Proclamation', enact:'2026-03-11', effective:'2026-09-01', issuer:'Ministry of Education',
+    institution:'House of Peoples\u2019 Representatives', keywords:'Education access, school meals',
+    abstract:'Amends the Basic Education Proclamation to widen enrollment eligibility and school feeding coverage.',
+    status:'Enacted', lang:'English, Amharic', related:'Basic Education Proclamation 2019', source:'Ministry of Education', version:'v1.0 (final)', format:'PDF, 1.4MB',
+    votes:{for:301,against:22,abstain:5}, tracked:false },
+  { id:'b4', title:'Public Health Insurance Directive', stage:'First Reading', topic:'Health',
+    plain:'Lays groundwork for a national public health insurance scheme, starting with a pilot in four regions.',
+    ref:'DIR/2026/009', type:'Directive', enact:'—', effective:'—', issuer:'Ministry of Health',
+    institution:'House of Peoples\u2019 Representatives', keywords:'Health insurance, pilot program',
+    abstract:'Directs the Ministry of Health to launch a four-region pilot toward a national insurance scheme.',
+    status:'Draft', lang:'English', related:'—', source:'Ministry of Health', version:'v1.0 (draft)', format:'PDF, 0.9MB',
+    votes:{for:0,against:0,abstain:0}, tracked:false },
+  { id:'b5', title:'National Data Protection Proclamation', stage:'Committee Review', topic:'Economy',
+    plain:'Introduces citizen data rights and obligations for organizations handling personal data, similar to international data protection norms.',
+    ref:'PROC/2026/112', type:'Proclamation', enact:'—', effective:'—', issuer:'Ministry of Innovation & Technology',
+    institution:'House of Peoples\u2019 Representatives', keywords:'Data protection, privacy, digital rights',
+    abstract:'Sets citizen data rights and compliance duties for data controllers and processors.',
+    status:'Draft', lang:'English, Amharic', related:'Digital Transactions Proclamation', source:'Ministry of Innovation & Technology', version:'v1.1', format:'PDF, 2.8MB',
+    votes:{for:0,against:0,abstain:0}, tracked:true },
+];
+
+const EVENTS_TODAY = [
+  { time:'10:00', title:'Plenary Session — Budget Review', type:'Plenary' },
+  { time:'13:30', title:'Standing Committee: Climate & Natural Resources', type:'Committee' },
+  { time:'16:00', title:'Vote: Digital Transactions Proclamation (2nd reading)', type:'Vote' },
+];
+
+const FEED = [
+  { type:'MP_Update', title:'Sara Getachew posted a constituency update', sub:'“Met with Bole small-business owners on the digital payments proclamation.”', meta:'2 hours ago' },
+  { type:'Upcoming_Bill', title:'Climate Resilience Bill moves to second reading', sub:'Public comment window closes in 6 days.', meta:'Today' },
+  { type:'Topic_News', title:'Education Ministry expands school meal program', sub:'Coverage now includes four additional woredas.', meta:'Yesterday' },
+  { type:'Upcoming_Bill', title:'Public Health Insurance Directive introduced', sub:'First reading scheduled for next week.', meta:'2 days ago' },
+  { type:'Topic_News', title:'Economists weigh in on Digital Transactions Proclamation', sub:'Mixed reaction from fintech industry groups.', meta:'3 days ago' },
+];
+
+const LANGUAGES = [
+  { code:'en', name:'English', native:'English' },
+  { code:'am', name:'Amharic', native:'\u12A0\u121B\u122D\u129B' },
+  { code:'om', name:'Afaan Oromo', native:'Afaan Oromoo' },
+  { code:'ti', name:'Tigrinya', native:'\u1275\u130D\u122D\u129B' },
+  { code:'so', name:'Somali', native:'Soomaali' },
+  { code:'aa', name:'Afar', native:'Qafar af' },
+];
+
+const STRINGS = {
+  en:{ dashboard:'Dashboard', bills:'Bills', reps:'Representatives', engage:'Engage', settings:'Settings',
+       whatsOn:"What's On Today", quickActions:'Quick Actions', myFeed:'Your Feed', contactMP:'Contact My MP',
+       upcomingVotes:'Upcoming Votes', trackBill:'Track a Bill', demoBadge:'Demo translation — full content translation is a CMS workflow, out of scope for this prototype.' },
+  am:{ dashboard:'\u12F3\u123D\u1266\u122D\u12F5', bills:'\u12E8\u1214\u130D \u12A0\u12CB\u1305\u1276\u127D', reps:'\u12E8\u121D\u12AD\u122D \u1264\u1275 \u12A0\u1263\u120B\u1275', engage:'\u1270\u1233\u1275\u134E',
+      settings:'\u1245\u12F5\u1218\u1228\u1276\u127D', whatsOn:'\u12E8\u12F5\u122D \u12A5\u1208\u1275', quickActions:'\u1240\u12CB\u122B\u129B \u12A5\u122D\u121D\u1303\u12CE\u127D',
+      myFeed:'የእርስዎ ዜና ማሳወቂያ', contactMP:'ተወካዬን ያነጋግሩ', upcomingVotes:'መጪ ድምጾች', trackBill:'ረቂቅ ህግ ይከታተሉ',
+      demoBadge:'ለማሳያ የተተረጎመ — ሙሉ ይዘት ትርጉም ወደፊት በሲኤምኤስ ስራ ይሆናል።' },
+};
+function T(key, lang){ return (STRINGS[lang] && STRINGS[lang][key]) || STRINGS.en[key]; }
+
+/* ---------------------------------------------------------
+   STATE
+--------------------------------------------------------- */
+const state = {
+  screen: 'ob-1',
+  prevScreen: null,
+  tab: 'dashboard',
+  onboarded: false,
+  selectedTopics: [],
+  myMP: MPS[0],
+  activeMP: MPS[0],
+  activeBill: null,
+  mpSubtab: 'profile',
+  billFilter: 'All',
+  billSearch: '',
+  engageSeg: 'polls',
+  trackedBills: new Set(['b2','b5']),
+  contrast: false,
+  language: 'en',
+  poll: { question:'Should mobile-money apps be required to publish annual transaction-fee reports?', options:['Yes','No','Not sure'], votes:[142,58,31], voted:null },
+  qaReactions: { like:false, insightful:false },
+  contactSent: false,
+};
+
+function go(screen){ state.prevScreen = state.screen; state.screen = screen; render(); document.getElementById('app').scrollTop=0; }
+function setTab(tab){ state.tab = tab; go(tab); }
+function back(){ go(state.prevScreen || 'dashboard'); }
+
+/* ---------------------------------------------------------
+   RENDER HELPERS
+--------------------------------------------------------- */
+function initials(name){ return name.split(' ').map(w=>w[0]).join(''); }
+function esc(s){ return s; }
+
+function topbar(title, opts={}){
+  if(opts.wordmark){
+    return `<div class="topbar">
+      <div class="wordmark">
+        <div class="crest">H</div>
+        <div class="name">HoPR<small>${T('dashboard', state.language)==='Dashboard' ? 'Public Participation' : ''}</small></div>
+      </div>
+    </div>`;
+  }
+  return `<div class="topbar">
+    <button class="back" onclick="back()">←</button>
+    <h1>${title}</h1>
+  </div>`;
+}
+
+function tabbar(){
+  const tabs = [
+    {id:'dashboard', ic:'🏠', label:T('dashboard', state.language)},
+    {id:'bills-list', ic:'📜', label:T('bills', state.language)},
+    {id:'mp-profile', ic:'🎗️', label:T('reps', state.language)},
+    {id:'engage', ic:'💬', label:T('engage', state.language)},
+    {id:'settings', ic:'⚙️', label:T('settings', state.language)},
+  ];
+  return `<div class="tabbar">${tabs.map(t=>`
+    <button class="tab ${state.tab===t.id?'active':''}" onclick="setTab('${t.id}')">
+      <span class="ic">${t.ic}</span>${t.label}
+    </button>`).join('')}</div>`;
+}
+
+function tally(votes, size='normal'){
+  const total = votes.for+votes.against+votes.abstain;
+  if(total===0){
+    return `<div class="tally"><span style="width:100%;background:var(--line)"></span></div>
+    <div class="tally-legend"><span>No votes recorded yet</span></div>`;
+  }
+  const pf=(votes.for/total*100).toFixed(0), pa=(votes.against/total*100).toFixed(0), pb=(votes.abstain/total*100).toFixed(0);
+  return `<div class="tally">
+      <span class="tally-for" style="width:${pf}%"></span>
+      <span class="tally-against" style="width:${pa}%"></span>
+      <span class="tally-abstain" style="width:${pb}%"></span>
+    </div>
+    <div class="tally-legend">
+      <span><i class="dot" style="background:var(--forest)"></i>For ${votes.for}</span>
+      <span><i class="dot" style="background:var(--terracotta)"></i>Against ${votes.against}</span>
+      <span><i class="dot" style="background:var(--gold)"></i>Abstain ${votes.abstain}</span>
+    </div>`;
+}
+
+/* ---------------------------------------------------------
+   SCREENS
+--------------------------------------------------------- */
+function screenOb1(){
+  return `
+    <div class="screen no-tabpad">
+      <div class="onboard-hero">
+        <div class="crest-lg">H</div>
+        <h1>Welcome to HoPR</h1>
+        <p>The public participation app connecting you directly with your Parliament. Let's find your representative.</p>
+      </div>
+      <div class="step-dots"><span class="on"></span><span></span></div>
+      <h2 class="section-title">Find My MP</h2>
+      <div class="card" style="text-align:center;">
+        <p style="font-size:13px;color:var(--ink-soft);margin:0 0 14px;">We use your location to match you with your constituency representative.</p>
+        <button class="btn btn-primary" onclick="go('ob-1b')">📍 Share my location</button>
+      </div>
+      <div class="demo-note" style="margin-top:14px;">Prototype note: location is simulated. In production this calls the constituency-lookup service defined in the SRS.</div>
+    </div>`;
+}
+function screenOb1b(){
+  const mp = state.myMP;
+  return `
+    <div class="screen no-tabpad">
+      <div class="onboard-hero" style="padding-top:6px;">
+        <h1 style="font-size:21px;">We found your MP</h1>
+        <p>Based on your location, here's your constituency representative.</p>
+      </div>
+      <div class="card mp-match-card">
+        <div class="avatar" style="background:${mp.color}">${initials(mp.name)}</div>
+        <div>
+          <div style="font-weight:700;font-size:15px;">${mp.name}</div>
+          <div style="font-size:12px;color:var(--ink-soft);">${mp.party}</div>
+          <div style="font-size:12px;color:var(--ink-soft);">${mp.region}</div>
+        </div>
+      </div>
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">
+        <button class="btn btn-primary" onclick="go('ob-2')">Confirm & continue</button>
+        <button class="btn btn-outline" onclick="go('ob-1')">Search a different MP</button>
+      </div>
+    </div>`;
+}
+const TOPICS = ['Climate','Economy','Education','Health','Justice','Infrastructure','Agriculture','Technology'];
+function screenOb2(){
+  return `
+    <div class="screen no-tabpad">
+      <div class="onboard-hero" style="padding-top:6px;">
+        <h1 style="font-size:21px;">What matters to you?</h1>
+        <p>Pick a few topics so your feed and alerts are personalized.</p>
+      </div>
+      <div class="step-dots"><span class="on"></span><span class="on"></span></div>
+      <div class="topic-wrap" style="margin-top:18px;">
+        ${TOPICS.map(t=>`<span class="topic-tag ${state.selectedTopics.includes(t)?'selected':''}" onclick="toggleTopic('${t}')">${t}</span>`).join('')}
+      </div>
+      <div style="margin-top:24px;">
+        <button class="btn btn-primary" ${state.selectedTopics.length===0?'disabled':''} onclick="finishOnboarding()">Finish setup</button>
+      </div>
+    </div>`;
+}
+function toggleTopic(t){
+  const i = state.selectedTopics.indexOf(t);
+  if(i>-1) state.selectedTopics.splice(i,1); else state.selectedTopics.push(t);
+  render();
+}
+function finishOnboarding(){ state.onboarded=true; setTab('dashboard'); }
+
+function screenDashboard(){
+  return `
+    ${topbar('', {wordmark:true})}
+    <div class="screen">
+      <h2 class="section-title" style="margin-top:2px;">${T('whatsOn', state.language)}</h2>
+      <div class="card">
+        ${EVENTS_TODAY.map(e=>`
+          <div class="today-item" onclick="alert('Event detail: ${e.title.replace(/'/g,"\\'")}')">
+            <span class="today-time">${e.time}</span>
+            <div style="flex:1;">
+              <div style="font-size:12.5px;font-weight:600;">${e.title}</div>
+              <div style="font-size:10.5px;color:var(--ink-soft);">${e.type}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+
+      <h2 class="section-title">Your Representative</h2>
+      <div class="widget-row">
+        <div class="card" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="openMP('${state.myMP.id}')">
+          <div class="avatar-sm avatar" style="background:${state.myMP.color}">${initials(state.myMP.name)}</div>
+          <div>
+            <div style="font-weight:700;font-size:12.5px;">${state.myMP.name}</div>
+            <div style="font-size:10.5px;color:var(--ink-soft);">${state.myMP.party}</div>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-title">${T('quickActions', state.language)}</h2>
+      <div class="qa-grid">
+        <button class="qa-btn" onclick="openMP('${state.myMP.id}'); prepContact();"><span class="ic">✉️</span><span class="lbl">${T('contactMP', state.language)}</span></button>
+        <button class="qa-btn" onclick="setTab('bills-list')"><span class="ic">🗳️</span><span class="lbl">${T('upcomingVotes', state.language)}</span></button>
+        <button class="qa-btn" onclick="setTab('bills-list')"><span class="ic">🔖</span><span class="lbl">${T('trackBill', state.language)}</span></button>
+      </div>
+
+      <h2 class="section-title">${T('myFeed', state.language)}</h2>
+      <div class="card">
+        ${FEED.map((f,i)=>feedRow(f)).join('')}
+      </div>
+    </div>
+    ${tabbar()}`;
+}
+function feedRow(f){
+  const cfg = {
+    MP_Update:{ic:'👤', bg:'var(--forest-tint)', c:'var(--forest)', tag:'From your MP'},
+    Upcoming_Bill:{ic:'📜', bg:'var(--gold-tint)', c:'#8A6A0A', tag:'Bill update'},
+    Topic_News:{ic:'📰', bg:'var(--sage-tint)', c:'#4A6552', tag:'Topic news'},
+  }[f.type];
+  return `<div class="feed-item">
+      <div class="feed-badge" style="background:${cfg.bg};color:${cfg.c}">${cfg.ic}</div>
+      <div style="flex:1;">
+        <div class="pill" style="background:${cfg.bg};color:${cfg.c};margin-bottom:4px;">${cfg.tag}</div>
+        <p class="feed-title">${f.title}</p>
+        <p class="feed-sub">${f.sub}</p>
+        <div class="feed-meta">${f.meta}</div>
+      </div>
+    </div>`;
+}
+
+function screenBillsList(){
+  const filters = ['All','Economy','Climate','Education','Health'];
+  let bills = BILLS.filter(b=> state.billFilter==='All' || b.topic===state.billFilter );
+  if(state.billSearch.trim()) bills = bills.filter(b=>b.title.toLowerCase().includes(state.billSearch.toLowerCase()));
+  return `
+    ${topbar(T('bills', state.language))}
+    <div class="screen">
+      <div class="search-bar">
+        <span>🔍</span>
+        <input placeholder="Search bills by title…" value="${state.billSearch}" oninput="state.billSearch=this.value; renderBillsListOnly();">
+      </div>
+      <div class="filter-row">
+        ${filters.map(f=>`<span class="filter-chip ${state.billFilter===f?'on':''}" onclick="state.billFilter='${f}';render();">${f}</span>`).join('')}
+      </div>
+      <div class="card" id="bills-container">
+        ${bills.map(b=>billRow(b)).join('') || '<div style="padding:20px 0;text-align:center;color:var(--ink-soft);font-size:13px;">No bills match your search.</div>'}
+      </div>
+    </div>
+    ${tabbar()}`;
+}
+function billRow(b){
+  const stageColor = b.stage==='Passed' ? 'pill-forest' : b.stage==='Committee Review' ? 'pill-gold' : 'pill-sage';
+  return `<div class="bill-row" onclick="openBill('${b.id}')">
+      <div class="toprow">
+        <h3>${b.title}</h3>
+        ${state.trackedBills.has(b.id)?'<span style="font-size:14px;">🔖</span>':''}
+      </div>
+      <div class="ref">${b.ref}</div>
+      <div style="margin-top:8px;display:flex;gap:6px;">
+        <span class="pill ${stageColor}">${b.stage}</span>
+        <span class="pill pill-sage">${b.topic}</span>
+      </div>
+    </div>`;
+}
+function openBill(id){ state.activeBill = BILLS.find(b=>b.id===id); go('bill-detail'); }
+
+function screenBillDetail(){
+  const b = state.activeBill;
+  const tracked = state.trackedBills.has(b.id);
+  const fields = [
+    ['Official name', b.title], ['Type of legislation', b.type], ['Reference number', b.ref],
+    ['Date of enactment', b.enact], ['Effective date', b.effective], ['Issuing authority', b.issuer],
+    ['Responsible institution', b.institution], ['Subject / keywords', b.keywords], ['Summary / abstract', b.abstract],
+    ['Status', b.status], ['Language', b.lang], ['Related documents', b.related],
+    ['Source', b.source], ['Version / amendment history', b.version], ['Document format', b.format],
+  ];
+  return `
+    ${topbar('Bill Details')}
+    <div class="screen">
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <span class="pill pill-gold">${b.stage}</span>
+        <span class="pill pill-sage">${b.topic}</span>
+      </div>
+      <h2 style="font-family:'Fraunces',serif;font-size:19px;margin:0 0 10px;font-weight:600;line-height:1.3;">${b.title}</h2>
+      <div class="card">
+        <div class="eyebrow" style="margin-bottom:6px;">Plain-language summary</div>
+        <p style="font-size:13.5px;line-height:1.55;margin:0;">${b.plain}</p>
+      </div>
+
+      <div class="card" style="margin-top:10px;">
+        <div class="track-toggle">
+          <div>
+            <div style="font-weight:700;font-size:13.5px;">${tracked?'Tracking this bill':'Track this bill'}</div>
+            <div style="font-size:11px;color:var(--ink-soft);">Get notified on stage changes and votes</div>
+          </div>
+          <div class="switch ${tracked?'on':''}" onclick="toggleTrack('${b.id}')"><div class="knob"></div></div>
+        </div>
+      </div>
+
+      <h2 class="section-title">How MPs Voted</h2>
+      <div class="card">${tally(b.votes)}</div>
+
+      <h2 class="section-title">Legislation Document Summary</h2>
+      <div class="card">
+        ${fields.map(([k,v])=>`<div class="meta-kv"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('')}
+      </div>
+    </div>
+    ${tabbar()}`;
+}
+function toggleTrack(id){
+  if(state.trackedBills.has(id)) state.trackedBills.delete(id); else state.trackedBills.add(id);
+  render();
+}
+
+function screenMPProfile(){
+  const mp = state.activeMP;
+  return `
+    ${topbar(T('reps', state.language))}
+    <div class="screen">
+      ${MPS.length>1 ? `<div class="filter-row" style="margin-bottom:14px;">
+        ${MPS.map(m=>`<span class="filter-chip ${mp.id===m.id?'on':''}" onclick="openMP('${m.id}')">${m.name.split(' ')[0]}</span>`).join('')}
+      </div>` : ''}
+      <div class="profile-hero">
+        <div class="avatar avatar-lg" style="background:${mp.color}">${initials(mp.name)}</div>
+        <h2>${mp.name}</h2>
+        <div class="party">${mp.party} · ${mp.region}</div>
+        <div class="contact-icons">
+          <a onclick="prepContact()">✉️</a>
+          <a>🌐</a>
+          <a>📞</a>
+        </div>
+      </div>
+      <div class="subtab-row">
+        <div class="subtab ${state.mpSubtab==='profile'?'on':''}" onclick="state.mpSubtab='profile';render();">Profile</div>
+        <div class="subtab ${state.mpSubtab==='votes'?'on':''}" onclick="state.mpSubtab='votes';render();">Voting Record</div>
+        <div class="subtab ${state.mpSubtab==='contrib'?'on':''}" onclick="state.mpSubtab='contrib';render();">Spoken</div>
+      </div>
+      ${mpSubtabContent(mp)}
+      <div style="margin-top:16px;">
+        <button class="btn btn-primary" onclick="prepContact()">${T('contactMP', state.language)}</button>
+      </div>
+    </div>
+    ${tabbar()}`;
+}
+function mpSubtabContent(mp){
+  if(state.mpSubtab==='profile'){
+    return `<div class="card">
+      <div class="eyebrow" style="margin-bottom:6px;">Biography</div>
+      <p style="font-size:13px;line-height:1.55;margin:0 0 12px;">${mp.bio}</p>
+      <div class="eyebrow" style="margin-bottom:6px;">Education</div>
+      <p style="font-size:13px;line-height:1.55;margin:0;">${mp.education}</p>
+    </div>`;
+  }
+  if(state.mpSubtab==='votes'){
+    return `<div class="card">
+      <div class="search-bar" style="margin-bottom:12px;"><span>🔍</span><input placeholder="Search by bill name…"></div>
+      ${mp.votes.map(v=>`<div class="vote-row">
+          <div><div class="bn">${v.bill}</div><div class="dt">${v.date}</div></div>
+          <span class="pill ${v.vote==='For'?'pill-forest':v.vote==='Against'?'pill-terracotta':'pill-gold'}">${v.vote}</span>
+        </div>`).join('')}
+    </div>`;
+  }
+  return `<div class="card">
+    ${mp.contributions.map(c=>`<div class="contrib-row"><h4>${c.title}</h4><p>${c.type} · ${c.date}</p></div>`).join('')}
+  </div>`;
+}
+function openMP(id){ state.activeMP = MPS.find(m=>m.id===id); state.mpSubtab='profile'; go('mp-profile'); state.tab='mp-profile'; }
+function prepContact(){ state.contactSent=false; go('contact-form'); }
+
+function screenContactForm(){
+  if(state.contactSent){
+    return `${topbar('Message Sent')}
+      <div class="screen">
+        <div class="confirm-splash">
+          <div class="ic-big">✓</div>
+          <h3>Your message was sent</h3>
+          <p>${state.activeMP.name}'s office will review your message. Verified responses appear in your Inbox and are traceable to this submission.</p>
+          <button class="btn btn-ghost" onclick="setTab('mp-profile')">Back to profile</button>
+        </div>
+      </div>
+      ${tabbar()}`;
+  }
+  return `
+    ${topbar('Contact My MP')}
+    <div class="screen">
+      <div class="verify-note">🔒 To prevent spam and ensure genuine constituent communication, this system requires name and address verification — no anonymous messages.</div>
+      <label class="f-label">Full name</label>
+      <input class="f-input" placeholder="e.g. Meron Alemu">
+      <label class="f-label">Constituency address</label>
+      <input class="f-input" placeholder="e.g. Bole Sub-city, Woreda 03">
+      <label class="f-label">Subject</label>
+      <input class="f-input" placeholder="e.g. Question on the Digital Transactions Proclamation">
+      <label class="f-label">Message</label>
+      <textarea class="f-input" placeholder="Write your message…"></textarea>
+      <button class="btn btn-primary" onclick="state.contactSent=true; render();">Send message</button>
+    </div>
+    ${tabbar()}`;
+}
+
+function screenEngage(){
+  return `
+    ${topbar(T('engage', state.language))}
+    <div class="screen">
+      <div class="seg-row">
+        <div class="seg ${state.engageSeg==='polls'?'on':''}" onclick="state.engageSeg='polls';render();">Polls</div>
+        <div class="seg ${state.engageSeg==='qa'?'on':''}" onclick="state.engageSeg='qa';render();">Constituency Q&A</div>
+        <div class="seg ${state.engageSeg==='consult'?'on':''}" onclick="state.engageSeg='consult';render();">Consultations</div>
+      </div>
+      ${state.engageSeg==='polls' ? engagePolls() : state.engageSeg==='qa' ? engageQA() : engageConsult()}
+    </div>
+    ${tabbar()}`;
+}
+function engagePolls(){
+  const p = state.poll;
+  const total = p.votes.reduce((a,b)=>a+b,0);
+  return `<div class="card">
+      <div class="eyebrow" style="margin-bottom:8px;">Non-binding poll</div>
+      <p style="font-weight:600;font-size:14px;line-height:1.4;margin:0 0 14px;">${p.question}</p>
+      ${p.options.map((opt,i)=>{
+        const pct = p.voted!==null ? Math.round(p.votes[i]/total*100) : null;
+        return `<div class="poll-opt ${p.voted===i?'voted-for':''}" onclick="votePoll(${i})">
+          ${p.voted!==null ? `<div class="fill" style="width:${pct}%"></div>` : ''}
+          <span class="lbl">${opt}${p.voted===i?' ✓':''}</span>
+          ${p.voted!==null ? `<span class="pct">${pct}%</span>` : ''}
+        </div>`;
+      }).join('')}
+      <div style="font-size:11px;color:var(--ink-soft);margin-top:6px;">${p.voted!==null ? total+' votes so far · results are non-binding' : 'Select an option to vote — one vote per user.'}</div>
+    </div>`;
+}
+function votePoll(i){
+  const p = state.poll;
+  if(p.voted!==null) return;
+  p.voted = i; p.votes[i]++;
+  render();
+}
+function engageQA(){
+  return `<div class="qa-thread">
+      <div class="qa-q">"Will the Digital Transactions Proclamation cover peer-to-peer transfers under 500 birr, or only merchant payments?" — submitted via Contact My MP</div>
+      <div class="qa-a">
+        <div class="who">🎗️ Sara Getachew <span class="pill pill-forest" style="margin-left:4px;">Verified response</span></div>
+        The current committee draft covers merchant payments only; the threshold for peer-to-peer transfers is still under review and I'll share an update after the next committee session.
+      </div>
+      <div class="reaction-row">
+        <button class="react-btn ${state.qaReactions.like?'on':''}" onclick="state.qaReactions.like=!state.qaReactions.like;render();">👍 Helpful ${state.qaReactions.like?'(you)':''}</button>
+        <button class="react-btn ${state.qaReactions.insightful?'on':''}" onclick="state.qaReactions.insightful=!state.qaReactions.insightful;render();">💡 Insightful</button>
+      </div>
+    </div>`;
+}
+function engageConsult(){
+  return `<div class="card">
+      <div class="pill pill-gold" style="margin-bottom:8px;">Open · closes in 6 days</div>
+      <h3 style="margin:0 0 6px;font-size:14px;font-family:'Fraunces',serif;">Climate Resilience & Green Investment Bill — Public Consultation</h3>
+      <p style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin:0 0 12px;">Share formal feedback before the second reading. All submissions are reviewed by the relevant Standing Committee.</p>
+      <button class="btn btn-outline" onclick="alert('Would open a formal feedback form for this consultation.')">Submit feedback</button>
+    </div>`;
+}
+
+function screenSettings(){
+  return `
+    ${topbar(T('settings', state.language))}
+    <div class="screen">
+      <h2 class="section-title" style="margin-top:2px;">Accessibility</h2>
+      <div class="card">
+        <div class="setting-row">
+          <div><div class="lbl">High contrast mode</div><div class="desc">Increases contrast for low-vision users, WCAG 2.1 AA</div></div>
+          <div class="switch ${state.contrast?'on':''}" onclick="toggleContrast()"><div class="knob"></div></div>
+        </div>
+        <div class="setting-row">
+          <div><div class="lbl">Screen reader labels</div><div class="desc">All interactive elements are labeled</div></div>
+          <span class="pill pill-forest">On by default</span>
+        </div>
+      </div>
+
+      <h2 class="section-title">Language</h2>
+      <div class="card">
+        <div class="lang-list">
+          ${LANGUAGES.map(l=>`<div class="lang-item ${state.language===l.code?'sel':''}" onclick="setLanguage('${l.code}')">
+              <div><div class="lname">${l.name}</div><div class="lnative">${l.native}</div></div>
+              <div class="check">${state.language===l.code?'✓':''}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="demo-note">${T('demoBadge', state.language)}</div>
+      <span class="scope-flag">Scope note: content translation pipeline is CMS work, not part of this prototype</span>
+
+      <h2 class="section-title">Notifications</h2>
+      <div class="card">
+        <div class="setting-row"><div class="lbl">Bill Alerts</div><div class="switch on"><div class="knob"></div></div></div>
+        <div class="setting-row"><div class="lbl">MP Updates</div><div class="switch on"><div class="knob"></div></div></div>
+        <div class="setting-row"><div class="lbl">Topic Alerts</div><div class="switch"><div class="knob"></div></div></div>
+      </div>
+    </div>
+    ${tabbar()}`;
+}
+function toggleContrast(){
+  state.contrast = !state.contrast;
+  document.getElementById('phone').setAttribute('data-contrast', state.contrast?'high':'normal');
+  render();
+}
+function setLanguage(code){
+  state.language = code;
+  document.getElementById('app').classList.toggle('lang-am', code==='am' || code==='ti');
+  render();
+}
+
+/* ---------------------------------------------------------
+   ROUTER
+--------------------------------------------------------- */
+function renderBillsListOnly(){
+  document.getElementById('bills-container').innerHTML =
+    BILLS.filter(b=> (state.billFilter==='All'||b.topic===state.billFilter) && b.title.toLowerCase().includes(state.billSearch.toLowerCase()))
+      .map(b=>billRow(b)).join('') || '<div style="padding:20px 0;text-align:center;color:var(--ink-soft);font-size:13px;">No bills match your search.</div>';
+}
+
+function render(){
+  const app = document.getElementById('app');
+  let html = '';
+  switch(state.screen){
+    case 'ob-1': html = screenOb1(); break;
+    case 'ob-1b': html = screenOb1b(); break;
+    case 'ob-2': html = screenOb2(); break;
+    case 'dashboard': html = screenDashboard(); break;
+    case 'bills-list': html = screenBillsList(); break;
+    case 'bill-detail': html = screenBillDetail(); break;
+    case 'mp-profile': html = screenMPProfile(); break;
+    case 'contact-form': html = screenContactForm(); break;
+    case 'engage': html = screenEngage(); break;
+    case 'settings': html = screenSettings(); break;
+    default: html = screenDashboard();
+  }
+  app.innerHTML = html;
+}
+
+// live clock
+function tick(){
+  const d = new Date();
+  document.getElementById('clock').textContent = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', hour12:false});
+}
+tick(); setInterval(tick, 30000);
+
+render();
+</script>
+</body>
+</html>
